@@ -49,6 +49,8 @@ async fn post_tweet(message: String, files: Vec<FilePayload>) -> Result<Tweet, S
     let twitter_client = TWITTER_CLIENT.get()
         .ok_or("Twitter client not initialized")?;
 
+    // TODO: Need to upload media first and then reference it here
+
     let response = twitter_client.post_tweet()
         .text(message)
         .send()
