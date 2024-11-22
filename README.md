@@ -1,7 +1,20 @@
-# Tauri + SvelteKit + TypeScript
+# Posty
 
-This template should help get you started developing with Tauri, SvelteKit and TypeScript in Vite.
+A simple app to post to bsky and twitter.
 
-## Recommended IDE Setup
 
-[VS Code](https://code.visualstudio.com/) + [Svelte](https://marketplace.visualstudio.com/items?itemName=svelte.svelte-vscode) + [Tauri](https://marketplace.visualstudio.com/items?itemName=tauri-apps.tauri-vscode) + [rust-analyzer](https://marketplace.visualstudio.com/items?itemName=rust-lang.rust-analyzer).
+## Setup
+
+1. Clone the repo
+2. [Setup Tauri](https://v2.tauri.app/start/prerequisites/)
+3. `npm install` 
+4. Setup .env Bsky access:
+    - PUBLIC_BSKY_USERNAME=
+    - PUBLIC_BSKY_PASSWORD=
+5. Setup .env Twitter/X access:
+    - PUBLIC_TWITTER_API_KEY=
+    - PUBLIC_TWITTER_API_KEY_SECRET=
+    - PUBLIC_TWITTER_ACCESS_TOKEN=
+    - PUBLIC_TWITTER_ACCESS_TOKEN_SECRET=
+6. Run app in dev mode `npm run tauri dev`
+  - First time might take a while
