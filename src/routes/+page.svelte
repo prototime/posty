@@ -9,16 +9,15 @@
 
     let files = $state<File[]>([]);
 
-
     const upload = async (endpoint: string, filesData: any): Promise<Response> => {
         return await fetch(`/api/${endpoint}`, {
             method: "POST",
             headers: {
-                'Content-Type': 'application/json',
+                "Content-Type": "application/json",
             },
             body: JSON.stringify({ files: filesData }),
         });
-    }
+    };
 
     const sendToBsky = async (filesData: any): Promise<Response> => {
         return await upload("bluesky", filesData);
@@ -42,21 +41,18 @@
                 const arrayBuffer = await file.arrayBuffer();
                 return {
                     buffer: Array.from(new Uint8Array(arrayBuffer)),
-                    type: file.type
+                    type: file.type,
                 };
             })
         );
-        
+
         // Run both API calls concurrently and collect results
-        const results = await Promise.allSettled([
-            sendToBsky(filesData),
-            sentToTwitterX(filesData)
-        ]);
+        const results = await Promise.allSettled([sendToBsky(filesData), sentToTwitterX(filesData)]);
 
         // Log any errors that occurred
         results.forEach((result, index) => {
-            const service = index === 0 ? 'Bluesky' : 'Twitter';
-            if (result.status === 'rejected') {
+            const service = index === 0 ? "Bluesky" : "Twitter";
+            if (result.status === "rejected") {
                 console.error(`${service} upload failed:`, result.reason);
             }
         });
@@ -68,25 +64,31 @@
     };
 
     const addFiles = (event: Event) => {
-        const formFiles = event.target.files;
+        const formFiles = (event.target as HTMLInputElement).files;
 
         // Loop over the selected files and append them to the array
-        for (let i = 0; i < formFiles.length; i++) {
-            files.push(formFiles[i]);
+        if (formFiles) {
+            for (let i = 0; i < formFiles.length; i++) {
+                files.push(formFiles[i]);
+            }
         }
     };
 </script>
 
 <div class="container flex flex-col items-center justify-center h-screen">
+    <h1 class="text-4xl font-bold abril-fatface">Posty</h1>
+    <p class="text-sm text-muted-foreground">Bluesky and X posting simplified</p>
     <form class="w-full max-w-[600px] flex flex-col gap-4 py-4" onsubmit={send}>
-        <Textarea bind:value={message} placeholder="Post something..." class="min-h-[100px]" />
+        <div class="relative">
+            <Textarea bind:value={message} placeholder="Post something..." class="min-h-[300px]" />
+        </div>
 
         <div class="flex justify-end gap-2">
-            <Label for="file" class={buttonVariants({ variant: "outline" })}>
+            <Label for="file" class="{buttonVariants({ variant: 'outline' })} cursor-pointer">
                 <ImagePlus />
             </Label>
             <input multiple accept="image/png, image/jpeg" class="hidden" id="file" name="file" type="file" onchange={addFiles} />
-            <Button class="grow" type="submit" disabled={sending}>
+            <Button class="grow" type="submit" disabled={sending || message.length > 260}>
                 {#if sending}
                     <Loader2 class="animate-spin" />
                 {:else}
@@ -94,6 +96,11 @@
                 {/if}
             </Button>
         </div>
+
+        <div class="text-sm text-muted-foreground text-right {message.length > 260 ? 'text-destructive' : ''}">
+            {message.length} / 260
+        </div>
+
         <div class="grid grid-cols-4 gap-2">
             {#if files && files.length > 0}
                 {#each files as image, index}
@@ -103,7 +110,7 @@
                         >
                             Remove File
                         </div>
-                        <img src={URL.createObjectURL(image)} alt="uploaded image" class="object-cover w-full h-full" />
+                        <img src={URL.createObjectURL(image)} alt="Image upload {index + 1}" class="object-cover w-full h-full" />
                     </button>
                 {/each}
             {/if}
