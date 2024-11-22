@@ -17,4 +17,4 @@ A simple app to post to bsky and twitter.
     - PUBLIC_TWITTER_ACCESS_TOKEN=
     - PUBLIC_TWITTER_ACCESS_TOKEN_SECRET=
 6. Run app in dev mode `npm run tauri dev`
-  - First time might take a while
+    - First time might take a while
