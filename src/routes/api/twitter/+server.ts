@@ -1,5 +1,6 @@
 import { json } from "@sveltejs/kit";
 import { Buffer } from 'buffer';
+import type { SendTweetV2Params } from "twitter-api-v2";
 
 
 export async function POST({ request, locals: { twitterClient } }) {
@@ -17,14 +18,18 @@ export async function POST({ request, locals: { twitterClient } }) {
         }
     }
 
-    const tweet = await twitterClient?.v2?.tweet({
-        text: message,
-        media:  {
-            media_ids: mediaIds.length > 0 ? mediaIds : undefined,
+    let tweetBody: SendTweetV2Params = {
+        text: message
+    }
+
+    if (mediaIds.length > 0) {
+        tweetBody.media = {
+            media_ids: mediaIds,
             tagged_user_ids: []
         }
-        
-    }); 
+    }
+
+    const tweet = await twitterClient?.v2?.tweet(tweetBody); 
 
     return json(tweet);
 }

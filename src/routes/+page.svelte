@@ -15,7 +15,7 @@
             headers: {
                 "Content-Type": "application/json",
             },
-            body: JSON.stringify({ files: filesData }),
+            body: JSON.stringify({ message, files: filesData }),
         });
     };
 
