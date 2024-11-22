@@ -1,17 +1,7 @@
 <script lang="ts">
     import { Button, buttonVariants } from "@/components/ui/button";
     import { Textarea } from "@/components/ui/textarea";
-    import { invoke } from "@tauri-apps/api/core";
     import { ImagePlus, Loader2 } from "lucide-svelte";
-    import { BskyAgent, RichText } from "@atproto/api";
-    import {
-        PUBLIC_BSKY_USERNAME,
-        PUBLIC_BSKY_PASSWORD,
-        PUBLIC_TWITTER_API_KEY,
-        PUBLIC_TWITTER_API_KEY_SECRET,
-        PUBLIC_TWITTER_ACCESS_TOKEN,
-        PUBLIC_TWITTER_ACCESS_TOKEN_SECRET,
-    } from "$env/static/public";
     import { Label } from "@/components/ui/label";
 
     let message = $state("");
@@ -19,74 +9,23 @@
 
     let files = $state<File[]>([]);
 
-    const bskyAgent = new BskyAgent({
-        service: "https://bsky.social",
-    });
 
-    try {
-        bskyAgent.login({
-            identifier: PUBLIC_BSKY_USERNAME,
-            password: PUBLIC_BSKY_PASSWORD,
-        });
-    } catch (err) {
-        console.error("failed to login to bsky");
-        console.log(err);
-    }
-
-    const sendToBsky = async () => {
-        let uploads = [];
-
-        if (files?.length > 0) {
-            for (let i = 0; i < files.length; i++) {
-                uploads.push({
-                    image: (await bskyAgent.uploadBlob(files[i], { encoding: "image/png" })).data.blob,
-                    alt: "",
-                });
-            }
-        }
-
-        // creating richtext
-        const rt = new RichText({
-            text: message,
-        });
-        await rt.detectFacets(bskyAgent); // automatically detects mentions and links
-
-        const postRecord = {
-            $type: "app.bsky.feed.post",
-            text: rt.text,
-            facets: rt.facets,
-            createdAt: new Date().toISOString(),
-            embed: {
-                images: uploads,
-                $type: "app.bsky.embed.images",
-            },
-        };
-
-        await bskyAgent.post(postRecord);
-    };
-
-    const sentToTwitterX = async () => {
-        // Convert files to array buffer
-        const filesData = await Promise.all(
-            files.map(async (file) => {
-                const arrayBuffer = await file.arrayBuffer();
-                return {
-                    buffer: Array.from(new Uint8Array(arrayBuffer)),
-                    type: file.type
-                };
-            })
-        );
-
-        await fetch("/api/twitter", {
+    const upload = async (endpoint: string, filesData: any): Promise<Response> => {
+        return await fetch(`/api/${endpoint}`, {
             method: "POST",
             headers: {
                 'Content-Type': 'application/json',
             },
-            body: JSON.stringify({ 
-                message, 
-                files: filesData 
-            }),
+            body: JSON.stringify({ files: filesData }),
         });
+    }
+
+    const sendToBsky = async (filesData: any): Promise<Response> => {
+        return await upload("bluesky", filesData);
+    };
+
+    const sentToTwitterX = async (filesData: any): Promise<Response> => {
+        return await upload("twitter", filesData);
     };
 
     const send = async (event: Event) => {
@@ -98,11 +37,32 @@
 
         sending = true;
 
-        // TODO: await multiple promises and handle errors
-        await sendToBsky();
-        await sentToTwitterX();
+        const filesData = await Promise.all(
+            files.map(async (file) => {
+                const arrayBuffer = await file.arrayBuffer();
+                return {
+                    buffer: Array.from(new Uint8Array(arrayBuffer)),
+                    type: file.type
+                };
+            })
+        );
+        
+        // Run both API calls concurrently and collect results
+        const results = await Promise.allSettled([
+            sendToBsky(filesData),
+            sentToTwitterX(filesData)
+        ]);
+
+        // Log any errors that occurred
+        results.forEach((result, index) => {
+            const service = index === 0 ? 'Bluesky' : 'Twitter';
+            if (result.status === 'rejected') {
+                console.error(`${service} upload failed:`, result.reason);
+            }
+        });
 
         message = "";
+        files = [];
 
         sending = false;
     };
