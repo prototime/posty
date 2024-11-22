@@ -64,7 +64,7 @@
         sending = true;
 
         // TODO: await multiple promises and handle errors
-        // await sendToBsky();
+        await sendToBsky();
         await sentToTwitterX();
 
         message = "";
