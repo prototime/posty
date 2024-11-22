@@ -3,6 +3,7 @@
     import { Textarea } from "@/components/ui/textarea";
     import { ImagePlus, Loader2 } from "lucide-svelte";
     import { Label } from "@/components/ui/label";
+    import { postTweet } from "@/twitter";
 
     let message = $state("");
     let sending = $state(false);
@@ -20,11 +21,12 @@
     };
 
     const sendToBsky = async (filesData: any): Promise<Response> => {
-        return await upload("bluesky", filesData);
+        // return await upload("bluesky", filesData);
     };
 
-    const sentToTwitterX = async (filesData: any): Promise<Response> => {
-        return await upload("twitter", filesData);
+    const sentToTwitterX = async (filesData: any): Promise<any> => {
+
+        return await postTweet(message, files);
     };
 
     const send = async (event: Event) => {
